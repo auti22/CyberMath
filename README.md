@@ -9,7 +9,7 @@ from PyQt6.QtGui import *
 from PyQt6.QtCore import *
 
 
-# --- КЛАСС "СЕВЕРНОЕ СИЯНИЕ" (ТВОИ ЦВЕТА) ---
+# --- КЛАСС "СЕВЕРНОЕ СИЯНИЕ" ---
 class AuroraBackground(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -52,7 +52,7 @@ class AuroraBackground(QWidget):
         painter.setOpacity(1.0)
 
 
-# --- ИДЕАЛЬНЫЕ КНОПКИ (БЕЗ ИЗМЕНЕНИЙ) ---
+# --- ИДЕАЛЬНЫЕ КНОПКИ ---
 class LivingButton(QPushButton):
     def __init__(self, text):
         super().__init__(text)
