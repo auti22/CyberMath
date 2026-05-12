@@ -1,0 +1,265 @@
+import sys
+import math
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
+from PyQt6.QtCore import *
+
+
+# --- КЛАСС "СЕВЕРНОЕ СИЯНИЕ" ---
+class AuroraBackground(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.phase = 0.0
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_bg)
+        self.timer.start(20)  # Оптимальная скорость для плавности
+
+    def update_bg(self):
+        self.phase += 0.02
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Создаем два перекрестных градиента для эффекта глубины
+        grad1 = QLinearGradient(0, 0, self.width(), self.height())
+        grad2 = QRadialGradient(self.width() // 2, self.height() // 2, self.width())
+
+        # Цвета
+        c_violet = QColor("#8A2BE2")
+        c_blue = QColor("mediumblue")
+        c_dark = QColor("#050510")  # Почти черный для контраста
+
+        # Анимируем позиции цветов
+        pos = (math.sin(self.phase) + 1) / 2
+
+        grad1.setColorAt(0, c_dark)
+        grad1.setColorAt(pos, c_blue.darker(150))
+        grad1.setColorAt(1, c_violet.darker(200))
+
+        painter.fillRect(self.rect(), grad1)
+
+        # Накладываем мягкое свечение поверх
+        painter.setOpacity(0.4)
+        grad2.setColorAt(0, c_violet)
+        grad2.setColorAt(1, Qt.GlobalColor.transparent)
+        painter.fillRect(self.rect(), grad2)
+        painter.setOpacity(1.0)
+
+
+# --- КНОПКИ ---
+class LivingButton(QPushButton):
+    def __init__(self, text):
+        super().__init__(text)
+        self.setFixedHeight(45)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.glow_phase = 0.0
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.tick)
+        self.timer.start(30)
+
+    def tick(self):
+        self.glow_phase += 0.06
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        pulse = abs(math.sin(self.glow_phase)) * 30
+        color_start = QColor("#7B68EE");
+        color_end = QColor("#6A5ACD")
+        grad = QLinearGradient(0, 0, 0, self.height())
+        if self.underMouse():
+            grad.setColorAt(0, color_start.lighter(110));
+            grad.setColorAt(1, color_end.lighter(105))
+        else:
+            grad.setColorAt(0, color_start.darker(int(100 + pulse)));
+            grad.setColorAt(1, color_end)
+        painter.setBrush(grad)
+        painter.setPen(QPen(QColor(123, 104, 238, 150), 1.2))
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 10, 10)
+        painter.setPen(Qt.GlobalColor.white)
+        painter.setFont(QFont("Segoe UI", 11, QFont.Weight.DemiBold))
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
+
+
+# --- ГЛАВНОЕ ОКНО ---
+class CyberMathAurora(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("CyberMath Aurora Edition")
+        self.resize(850, 650)
+
+        self.bg = AuroraBackground()
+        self.setCentralWidget(self.bg)
+        self.main_layout = QVBoxLayout(self.bg)
+
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane { border: none; background: rgba(10, 10, 25, 150); border-radius: 20px; }
+            QTabBar::tab { background: rgba(20, 20, 40, 180); color: #8A2BE2; padding: 12px 25px; border-top-left-radius: 12px; margin: 2px; }
+            QTabBar::tab:selected { background: #8A2BE2; color: white; }
+            QLineEdit { background: rgba(0, 0, 0, 200); color: white; border: 1px solid #8A2BE2; padding: 10px; border-radius: 8px; }
+            QLabel { color: #E6E6FA; font-size: 16px; font-weight: bold; background: transparent; }
+            QRadioButton { color: white; spacing: 8px; font-weight: bold; }
+            QRadioButton::indicator { width: 18px; height: 18px; border-radius: 9px; border: 2px solid #8A2BE2; }
+            QRadioButton::indicator:checked { background: #8A2BE2; }
+        """)
+
+        self.main_layout.addWidget(self.tabs)
+
+        self.setup_calc()
+        self.setup_pythagoras()
+        self.setup_trig()
+        self.setup_prob()
+        self.setup_quad()
+
+    def setup_calc(self):
+        w = QWidget();
+        l = QVBoxLayout(w)
+        self.calc_display = QLineEdit();
+        self.calc_display.setFixedHeight(50);
+        l.addWidget(self.calc_display)
+        grid = QGridLayout()
+        btns = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', 'C', '+']
+        for i, b in enumerate(btns):
+            btn = LivingButton(b)
+            btn.clicked.connect(lambda ch, x=b: self.calc_press(x))
+            grid.addWidget(btn, i // 4, i % 4)
+        l.addLayout(grid)
+        eq = LivingButton("=");
+        eq.clicked.connect(self.calc_solve);
+        l.addWidget(eq)
+        self.tabs.addTab(w, "🔢 Счёт")
+
+    def calc_press(self, val):
+        if val == 'C':
+            self.calc_display.clear()
+        else:
+            self.calc_display.setText(self.calc_display.text() + val)
+
+    def calc_solve(self):
+        try:
+            self.calc_display.setText(str(eval(self.calc_display.text())))
+        except:
+            self.calc_display.setText("Error")
+
+    def setup_pythagoras(self):
+        w = QWidget();
+        l = QVBoxLayout(w)
+        mode_box = QHBoxLayout()
+        self.radio_hyp = QRadioButton("Гипотенузу");
+        self.radio_hyp.setChecked(True)
+        self.radio_leg = QRadioButton("Катет")
+        mode_box.addWidget(self.radio_hyp);
+        mode_box.addWidget(self.radio_leg);
+        l.addLayout(mode_box)
+        self.pa = QLineEdit();
+        self.pa.setPlaceholderText("Значение 1");
+        l.addWidget(self.pa)
+        self.pb = QLineEdit();
+        self.pb.setPlaceholderText("Значение 2");
+        l.addWidget(self.pb)
+        self.p_res = QLabel("Результат");
+        self.p_res.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        l.addWidget(self.p_res)
+        btn = LivingButton("Рассчитать");
+        btn.clicked.connect(self.solve_p);
+        l.addWidget(btn)
+        l.addStretch();
+        self.tabs.addTab(w, "📐 Пифагор")
+
+    def solve_p(self):
+        try:
+            v1, v2 = float(self.pa.text()), float(self.pb.text())
+            if self.radio_hyp.isChecked():
+                self.p_res.setText(f"c = {math.sqrt(v1 ** 2 + v2 ** 2):.4f}")
+            else:
+                self.p_res.setText(f"Катет = {math.sqrt(max(v1, v2) ** 2 - min(v1, v2) ** 2):.4f}")
+        except:
+            self.p_res.setText("Ошибка")
+
+    def setup_trig(self):
+        w = QWidget();
+        l = QVBoxLayout(w)
+        self.trig_in = QLineEdit();
+        self.trig_in.setPlaceholderText("Угол");
+        l.addWidget(self.trig_in)
+        self.trig_res = QLabel("sin / cos / tg");
+        self.trig_res.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        l.addWidget(self.trig_res)
+        btn = LivingButton("Вычислить");
+        btn.clicked.connect(self.solve_trig);
+        l.addWidget(btn)
+        l.addStretch();
+        self.tabs.addTab(w, "📊 Триго")
+
+    def solve_trig(self):
+        try:
+            a = math.radians(float(self.trig_in.text()))
+            self.trig_res.setText(f"S: {math.sin(a):.3f} | C: {math.cos(a):.3f} | T: {math.tan(a):.3f}")
+        except:
+            self.trig_res.setText("Ошибка")
+
+    def setup_prob(self):
+        w = QWidget();
+        l = QVBoxLayout(w)
+        self.pm = QLineEdit();
+        self.pn = QLineEdit()
+        self.pm.setPlaceholderText("m");
+        self.pn.setPlaceholderText("n")
+        l.addWidget(self.pm);
+        l.addWidget(self.pn)
+        self.pr = QLabel("P = m/n");
+        self.pr.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        l.addWidget(self.pr)
+        btn = LivingButton("Рассчитать");
+        btn.clicked.connect(self.solve_prob);
+        l.addWidget(btn)
+        l.addStretch();
+        self.tabs.addTab(w, "🎲 Шанс")
+
+    def solve_prob(self):
+        try:
+            self.pr.setText(f"P = {float(self.pm.text()) / float(self.pn.text()):.4f}")
+        except:
+            self.pr.setText("Ошибка")
+
+    def setup_quad(self):
+        w = QWidget();
+        l = QVBoxLayout(w)
+        self.qa = QLineEdit();
+        self.qb = QLineEdit();
+        self.qc = QLineEdit()
+        l.addWidget(self.qa);
+        l.addWidget(self.qb);
+        l.addWidget(self.qc)
+        self.qr = QLabel("Корни");
+        self.qr.setAlignment(Qt.AlignmentFlag.AlignCenter);
+        l.addWidget(self.qr)
+        btn = LivingButton("Решить");
+        btn.clicked.connect(self.solve_quad);
+        l.addWidget(btn)
+        l.addStretch();
+        self.tabs.addTab(w, "📉 Квадрат")
+
+    def solve_quad(self):
+        try:
+            a, b, c = float(self.qa.text()), float(self.qb.text()), float(self.qc.text())
+            d = b ** 2 - 4 * a * c
+            if d > 0:
+                self.qr.setText(f"x1={(-b + d ** 0.5) / (2 * a):.2f} x2={(-b - d ** 0.5) / (2 * a):.2f}")
+            elif d == 0:
+                self.qr.setText(f"x={-b / (2 * a):.2f}")
+            else:
+                self.qr.setText("Корней нет")
+        except:
+            self.qr.setText("Ошибка")
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ex = CyberMathAurora()
+    ex.show()
+    sys.exit(app.exec())
