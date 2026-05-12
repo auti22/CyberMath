@@ -1,6 +1,7 @@
 # CyberMath
-Rus: Калькулятор для пробников по типу ОГЭ/ЕГЭ/ВПР и другие, что бы не терять время на пустые решения 
-Некоторые антивирусы могут ошибочно считать файл подозрительным из-за упаковщика PyInstaller. Вы можете проверить исходный код в репозитории и убедиться в безопасности
+Rus: Калькулятор для пробников по типу ОГЭ/ЕГЭ/ВПР и другие, что бы не терять время на пустые решения. Eng:Developing a specialized calculator to streamline school studies. Helping students skip the routine and focus on what matters during exam prep
+Некоторые антивирусы могут ошибочно считать файл подозрительным из-за упаковщика PyInstaller. Вы можете проверить исходный код в репозитории и убедиться в безопасности Eng:Some antiviruses may mistakenly consider the file suspicious due to the PyInstaller packer. You can check the source code in the repository and ensure the security of
+Код:        eng: Code
 import sys
 import math
 from PyQt6.QtWidgets import *
